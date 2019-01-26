@@ -3,7 +3,8 @@ package org.json;
 import java.io.Closeable;
 
 /*
- Copyright (c) 2002 JSON.org
+ Original work Copyright (c) 2002 JSON.org
+ Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
