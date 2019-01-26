@@ -172,6 +172,16 @@ public class JSONObject {
     public static final Object NULL = new Null();
 
     /**
+     * Indicates if BigNumber is to be used
+     */
+    private boolean bigNumberEnabled = false;
+
+    /**
+     * Parses number token as BigNumber is token length exceeds this value
+     */
+    private int bigNumberLength;
+
+    /**
      * Construct an empty JSONObject.
      */
     public JSONObject() {
@@ -209,12 +219,18 @@ public class JSONObject {
      *
      * @param x
      *            A JSONTokener object containing the source string.
+     * @param bigNumberEnabled
+     *            If numbers should be attempted to be parsed as BigNumbers
+     * @param bigNumberLength
+     *            Token length when it should be considered as BigNumber
      * @throws JSONException
      *             If there is a syntax error in the source string or a
      *             duplicated key.
      */
-    public JSONObject(JSONTokener x) throws JSONException {
+    public JSONObject(JSONTokener x, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
         this();
+        this.bigNumberEnabled = bigNumberEnabled;
+        this.bigNumberLength = bigNumberLength;
         char c;
         String key;
 
@@ -224,13 +240,13 @@ public class JSONObject {
         for (;;) {
             c = x.nextClean();
             switch (c) {
-            case 0:
-                throw x.syntaxError("A JSONObject text must end with '}'");
-            case '}':
-                return;
-            default:
-                x.back();
-                key = x.nextValue().toString();
+                case 0:
+                    throw x.syntaxError("A JSONObject text must end with '}'");
+                case '}':
+                    return;
+                default:
+                    x.back();
+                    key = x.nextValue().toString();
             }
 
             // The key is followed by ':'.
@@ -239,9 +255,9 @@ public class JSONObject {
             if (c != ':') {
                 throw x.syntaxError("Expected a ':' after a key");
             }
-            
+
             // Use syntaxError(..) to include error location
-            
+
             if (key != null) {
                 // Check if key exists
                 if (this.opt(key) != null) {
@@ -258,19 +274,49 @@ public class JSONObject {
             // Pairs are separated by ','.
 
             switch (x.nextClean()) {
-            case ';':
-            case ',':
-                if (x.nextClean() == '}') {
+                case ';':
+                case ',':
+                    if (x.nextClean() == '}') {
+                        return;
+                    }
+                    x.back();
+                    break;
+                case '}':
                     return;
-                }
-                x.back();
-                break;
-            case '}':
-                return;
-            default:
-                throw x.syntaxError("Expected a ',' or '}'");
+                default:
+                    throw x.syntaxError("Expected a ',' or '}'");
             }
         }
+    }
+
+    /**
+     * Construct a JSONObject from a JSONTokener.
+     *
+     * @param x
+     *            A JSONTokener object containing the source string.
+     * @param bigNumberEnabled
+     *            If numbers should be attempted to be parsed as BigNumbers.
+     *            If the, the default legnth of token to be considered as BigNumber is 14
+     * @throws JSONException
+     *             If there is a syntax error in the source string or a
+     *             duplicated key.
+     */
+    public JSONObject(JSONTokener x, boolean bigNumberEnabled) throws JSONException {
+        this(x, bigNumberEnabled, 14);
+    }
+        /**
+         * Construct a JSONObject from a JSONTokener.
+         *
+         * Using this constructor does not enable BigNumber support.
+         *
+         * @param x
+         *            A JSONTokener object containing the source string.
+         * @throws JSONException
+         *             If there is a syntax error in the source string or a
+         *             duplicated key.
+         */
+    public JSONObject(JSONTokener x) throws JSONException {
+        this(x, false, 14);
     }
 
     /**
@@ -398,12 +444,52 @@ public class JSONObject {
      *            A string beginning with <code>{</code>&nbsp;<small>(left
      *            brace)</small> and ending with <code>}</code>
      *            &nbsp;<small>(right brace)</small>.
+     * @param bigNumberEnabled
+     *            If numbers should be attempted to be parsed as BigNumbers
+     * @param bigNumberLength
+     *            Token length when it should be considered as BigNumber
      * @exception JSONException
      *                If there is a syntax error in the source string or a
      *                duplicated key.
      */
+    public JSONObject(String source, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
+        this(new JSONTokener(source), bigNumberEnabled, bigNumberLength);
+    }
+
+    /**
+     * Construct a JSONObject from a source JSON text string.
+     *
+     * @param source
+     *            A string beginning with <code>{</code>&nbsp;<small>(left
+     *            brace)</small> and ending with <code>}</code>
+     *            &nbsp;<small>(right brace)</small>.*
+     * @param bigNumberEnabled
+     *            If numbers should be attempted to be parsed as BigNumbers.
+     *            If the, the default legnth of token to be considered as BigNumber is 14
+     * @throws JSONException
+     *             If there is a syntax error in the source string or a
+     *             duplicated key.
+     */
+    public JSONObject(String source, boolean bigNumberEnabled) throws JSONException {
+        this(new JSONTokener(source), bigNumberEnabled, 14);
+    }
+    /**
+     * Construct a JSONObject from a source JSON text string. This is the most
+     * commonly used JSONObject constructor.
+     *
+     * Using this constructor does not enable BigNumber support.
+     *
+     * @param source
+     *            A string beginning with <code>{</code>&nbsp;<small>(left
+     *            brace)</small> and ending with <code>}</code>
+     *            &nbsp;<small>(right brace)</small>.*
+     *
+     * @throws JSONException
+     *             If there is a syntax error in the source string or a
+     *             duplicated key.
+     */
     public JSONObject(String source) throws JSONException {
-        this(new JSONTokener(source));
+        this(new JSONTokener(source), false, 14);
     }
 
     /**
@@ -2085,7 +2171,7 @@ public class JSONObject {
             if (isDecimalNotation(val)) {
                 // quick dirty way to see if we need a BigDecimal instead of a Double
                 // this only handles some cases of overflow or underflow
-                if (val.length()>14) {
+                if (val.length()>bigNumberLength) {
                     return new BigDecimal(val);
                 }
                 final Double d = Double.valueOf(val);
@@ -2168,21 +2254,22 @@ public class JSONObject {
         char initial = string.charAt(0);
         if ((initial >= '0' && initial <= '9') || initial == '-') {
             try {
-                // if we want full Big Number support the contents of this
-                // `try` block can be replaced with:
-                // return stringToNumber(string);
-                if (isDecimalNotation(string)) {
-                    Double d = Double.valueOf(string);
-                    if (!d.isInfinite() && !d.isNaN()) {
-                        return d;
-                    }
+                if (bigNumberEnabled) {
+                    return stringToNumber(string);
                 } else {
-                    Long myLong = Long.valueOf(string);
-                    if (string.equals(myLong.toString())) {
-                        if (myLong.longValue() == myLong.intValue()) {
-                            return Integer.valueOf(myLong.intValue());
+                    if (isDecimalNotation(string)) {
+                        Double d = Double.valueOf(string);
+                        if (!d.isInfinite() && !d.isNaN()) {
+                            return d;
                         }
-                        return myLong;
+                    } else {
+                        Long myLong = Long.valueOf(string);
+                        if (string.equals(myLong.toString())) {
+                            if (myLong.longValue() == myLong.intValue()) {
+                                return Integer.valueOf(myLong.intValue());
+                            }
+                            return myLong;
+                        }
                     }
                 }
             } catch (Exception ignore) {
