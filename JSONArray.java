@@ -1,7 +1,8 @@
 package org.json;
 
 /*
- Copyright (c) 2002 JSON.org
+ Original work Copyright (c) 2002 JSON.org
+ Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -88,11 +89,20 @@ public class JSONArray implements Iterable<Object> {
      */
     private final ArrayList<Object> myArrayList;
 
+    private int bigNumberLength = 14;
+
     /**
      * Construct an empty JSONArray.
      */
     public JSONArray() {
         this.myArrayList = new ArrayList<Object>();
+    }
+
+
+    public JSONArray(int bigNumberLength) {
+        this();
+        this.bigNumberLength = bigNumberLength;
+
     }
 
     /**
@@ -103,8 +113,8 @@ public class JSONArray implements Iterable<Object> {
      * @throws JSONException
      *             If there is a syntax error.
      */
-    public JSONArray(JSONTokener x) throws JSONException {
-        this();
+    public JSONArray(JSONTokener x, int bigNumberLength) throws JSONException {
+        this(bigNumberLength);
         if (x.nextClean() != '[') {
             throw x.syntaxError("A JSONArray text must start with '['");
         }
@@ -149,6 +159,32 @@ public class JSONArray implements Iterable<Object> {
     }
 
     /**
+     * Construct a JSONArray from a JSONTokener.
+     *
+     * @param x
+     *            A JSONTokener
+     * @throws JSONException
+     *             If there is a syntax error.
+     */
+    public JSONArray(JSONTokener x) throws JSONException {
+        this(x, 14);
+    }
+
+    /**
+     * Construct a JSONArray from a source JSON text.
+     *
+     * @param source
+     *            A string that begins with <code>[</code>&nbsp;<small>(left
+     *            bracket)</small> and ends with <code>]</code>
+     *            &nbsp;<small>(right bracket)</small>.
+     * @throws JSONException
+     *             If there is a syntax error.
+     */
+    public JSONArray(String source, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
+        this(new JSONTokener(source, bigNumberEnabled, bigNumberLength), bigNumberLength);
+    }
+
+    /**
      * Construct a JSONArray from a source JSON text.
      *
      * @param source
@@ -159,7 +195,7 @@ public class JSONArray implements Iterable<Object> {
      *             If there is a syntax error.
      */
     public JSONArray(String source) throws JSONException {
-        this(new JSONTokener(source));
+        this(new JSONTokener(source), 14);
     }
 
     /**
@@ -296,7 +332,7 @@ public class JSONArray implements Iterable<Object> {
             if (object instanceof Number) {
                 return (Number)object;
             }
-            return JSONObject.stringToNumber(object.toString());
+            return JSONObject.stringToNumber(object.toString(), bigNumberLength);
         } catch (Exception e) {
             throw new JSONException("JSONArray[" + index + "] is not a number.", e);
         }
@@ -826,7 +862,7 @@ public class JSONArray implements Iterable<Object> {
         
         if (val instanceof String) {
             try {
-                return JSONObject.stringToNumber((String) val);
+                return JSONObject.stringToNumber((String) val, bigNumberLength);
             } catch (Exception e) {
                 return defaultValue;
             }

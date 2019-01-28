@@ -173,11 +173,6 @@ public class JSONObject {
     public static final Object NULL = new Null();
 
     /**
-     * Indicates if BigNumber is to be used
-     */
-    private boolean bigNumberEnabled = false;
-
-    /**
      * Parses number token as BigNumber is token length exceeds this value
      */
     private int bigNumberLength;
@@ -220,17 +215,14 @@ public class JSONObject {
      *
      * @param x
      *            A JSONTokener object containing the source string.
-     * @param bigNumberEnabled
-     *            If numbers should be attempted to be parsed as BigNumbers
      * @param bigNumberLength
      *            Token length when it should be considered as BigNumber
      * @throws JSONException
      *             If there is a syntax error in the source string or a
      *             duplicated key.
      */
-    public JSONObject(JSONTokener x, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
+    public JSONObject(JSONTokener x, int bigNumberLength) throws JSONException {
         this();
-        this.bigNumberEnabled = bigNumberEnabled;
         this.bigNumberLength = bigNumberLength;
         char c;
         String key;
@@ -293,31 +285,16 @@ public class JSONObject {
     /**
      * Construct a JSONObject from a JSONTokener.
      *
+     * Using this constructor does not enable BigNumber support.
+     *
      * @param x
      *            A JSONTokener object containing the source string.
-     * @param bigNumberEnabled
-     *            If numbers should be attempted to be parsed as BigNumbers.
-     *            If the, the default legnth of token to be considered as BigNumber is 14
      * @throws JSONException
      *             If there is a syntax error in the source string or a
      *             duplicated key.
      */
-    public JSONObject(JSONTokener x, boolean bigNumberEnabled) throws JSONException {
-        this(x, bigNumberEnabled, 14);
-    }
-        /**
-         * Construct a JSONObject from a JSONTokener.
-         *
-         * Using this constructor does not enable BigNumber support.
-         *
-         * @param x
-         *            A JSONTokener object containing the source string.
-         * @throws JSONException
-         *             If there is a syntax error in the source string or a
-         *             duplicated key.
-         */
     public JSONObject(JSONTokener x) throws JSONException {
-        this(x, false, 14);
+        this(x, 14);
     }
 
     /**
@@ -454,7 +431,7 @@ public class JSONObject {
      *                duplicated key.
      */
     public JSONObject(String source, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
-        this(new JSONTokener(source), bigNumberEnabled, bigNumberLength);
+        this(new JSONTokener(source, bigNumberEnabled, bigNumberLength), bigNumberLength);
     }
 
     /**
@@ -472,7 +449,7 @@ public class JSONObject {
      *             duplicated key.
      */
     public JSONObject(String source, boolean bigNumberEnabled) throws JSONException {
-        this(new JSONTokener(source), bigNumberEnabled, 14);
+        this(new JSONTokener(source, bigNumberEnabled, 14), 14);
     }
     /**
      * Construct a JSONObject from a source JSON text string. This is the most
@@ -490,7 +467,7 @@ public class JSONObject {
      *             duplicated key.
      */
     public JSONObject(String source) throws JSONException {
-        this(new JSONTokener(source), false, 14);
+        this(new JSONTokener(source, false, 14), 14);
     }
 
     /**
@@ -573,12 +550,12 @@ public class JSONObject {
         Object object = this.opt(key);
         if (object == null) {
             this.put(key,
-                    value instanceof JSONArray ? new JSONArray().put(value)
+                    value instanceof JSONArray ? new JSONArray(this.bigNumberLength).put(value)
                             : value);
         } else if (object instanceof JSONArray) {
             ((JSONArray) object).put(value);
         } else {
-            this.put(key, new JSONArray().put(object).put(value));
+            this.put(key, new JSONArray(this.bigNumberLength).put(object).put(value));
         }
         return this;
     }
@@ -604,7 +581,7 @@ public class JSONObject {
         testValidity(value);
         Object object = this.opt(key);
         if (object == null) {
-            this.put(key, new JSONArray().put(value));
+            this.put(key, new JSONArray(this.bigNumberLength).put(value));
         } else if (object instanceof JSONArray) {
             this.put(key, ((JSONArray) object).put(value));
         } else {
@@ -801,7 +778,7 @@ public class JSONObject {
             if (object instanceof Number) {
                 return (Number)object;
             }
-            return stringToNumber(object.toString());
+            return stringToNumber(object.toString(), bigNumberLength);
         } catch (Exception e) {
             throw new JSONException("JSONObject[" + quote(key)
                     + "] is not a number.", e);
@@ -1499,7 +1476,7 @@ public class JSONObject {
         }
         
         try {
-            return stringToNumber(val.toString());
+            return stringToNumber(val.toString(), bigNumberLength);
         } catch (Exception e) {
             return defaultValue;
         }
@@ -1681,9 +1658,6 @@ public class JSONObject {
      * Searches the class hierarchy to see if the method or it's super
      * implementations and interfaces has the annotation. Returns the depth of the
      * annotation in the hierarchy.
-     *
-     * @param <A>
-     *            type of the annotation
      *
      * @param m
      *            method to check
@@ -2165,7 +2139,7 @@ public class JSONObject {
      * @throws NumberFormatException thrown if the value is not a valid number. A public
      *      caller should catch this and wrap it in a {@link JSONException} if applicable.
      */
-    protected static Number stringToNumber(final String val) throws NumberFormatException {
+    protected static Number stringToNumber(final String val, int bigNumberLength) throws NumberFormatException {
         char initial = val.charAt(0);
         if ((initial >= '0' && initial <= '9') || initial == '-') {
             // decimal representation
@@ -2231,7 +2205,7 @@ public class JSONObject {
      */
     // Changes to this method must be copied to the corresponding method in
     // the XML class to keep full support for Android
-    public static Object stringToValue(String string) {
+    public static Object stringToValue(String string, boolean bigNumberEnabled, int bigNumberLength) {
         if ("".equals(string)) {
             return string;
         }
@@ -2256,7 +2230,7 @@ public class JSONObject {
         if ((initial >= '0' && initial <= '9') || initial == '-') {
             try {
                 if (bigNumberEnabled) {
-                    return stringToNumber(string);
+                    return stringToNumber(string, bigNumberLength);
                 } else {
                     if (isDecimalNotation(string)) {
                         Double d = Double.valueOf(string);
@@ -2318,7 +2292,7 @@ public class JSONObject {
         if (names == null || names.isEmpty()) {
             return null;
         }
-        JSONArray ja = new JSONArray();
+        JSONArray ja = new JSONArray(this.bigNumberLength);
         for (int i = 0; i < names.length(); i += 1) {
             ja.put(this.opt(names.getString(i)));
         }

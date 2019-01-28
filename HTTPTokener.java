@@ -1,7 +1,8 @@
 package org.json;
 
 /*
-Copyright (c) 2002 JSON.org
+Original work Copyright (c) 2002 JSON.org
+Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +38,23 @@ public class HTTPTokener extends JSONTokener {
      * @param string A source string.
      */
     public HTTPTokener(String string) {
-        super(string);
+        this(string, false, 14);
+    }
+
+    /**
+     * Construct an HTTPTokener from a string.
+     * @param string A source string.
+     */
+    public HTTPTokener(String string, boolean bigNumberEnabled) {
+        this(string, bigNumberEnabled, 14);
+    }
+
+    /**
+     * Construct an HTTPTokener from a string.
+     * @param string A source string.
+     */
+    public HTTPTokener(String string, boolean bigNumberEnabled, int bigNumberLength) {
+        super(string, bigNumberEnabled, bigNumberLength);
     }
 
 

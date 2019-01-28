@@ -8,7 +8,8 @@ import java.io.Reader;
 import java.io.StringReader;
 
 /*
-Copyright (c) 2002 JSON.org
+Original work Copyright (c) 2002 JSON.org
+Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -55,17 +56,14 @@ public class JSONTokener {
     private boolean usePrevious;
     /** the number of characters read in the previous line. */
     private long characterPreviousLine;
+    private boolean bigNumberEnabled;
+    private int bigNumberLength;
 
 
-    /**
-     * Construct a JSONTokener from a Reader. The caller must close the Reader.
-     *
-     * @param reader     A reader.
-     */
-    public JSONTokener(Reader reader) {
+    public JSONTokener(Reader reader, boolean bigNumberEnabled, int bigNumberLength) {
         this.reader = reader.markSupported()
                 ? reader
-                        : new BufferedReader(reader);
+                : new BufferedReader(reader);
         this.eof = false;
         this.usePrevious = false;
         this.previous = 0;
@@ -73,15 +71,33 @@ public class JSONTokener {
         this.character = 1;
         this.characterPreviousLine = 0;
         this.line = 1;
+        this.bigNumberEnabled = bigNumberEnabled;
+        this.bigNumberLength = bigNumberLength;
     }
 
+    /**
+     * Construct a JSONTokener from a Reader. The caller must close the Reader.
+     *
+     * @param reader     A reader.
+     */
+    public JSONTokener(Reader reader) {
+        this(reader, false, 14);
+    }
+
+    /**
+     * Construct a JSONTokener from an InputStream. The caller must close the input stream.
+     * @param inputStream The source.
+     */
+    public JSONTokener(InputStream inputStream, boolean bigNumberEnabled, int bigNumberLength) {
+        this(new InputStreamReader(inputStream), bigNumberEnabled, bigNumberLength);
+    }
 
     /**
      * Construct a JSONTokener from an InputStream. The caller must close the input stream.
      * @param inputStream The source.
      */
     public JSONTokener(InputStream inputStream) {
-        this(new InputStreamReader(inputStream));
+        this(new InputStreamReader(inputStream), false, 14);
     }
 
 
@@ -90,8 +106,17 @@ public class JSONTokener {
      *
      * @param s     A source string.
      */
+    public JSONTokener(String s, boolean bigNumberEnabled, int bigNumberLength) {
+        this(new StringReader(s), bigNumberEnabled, bigNumberLength);
+    }
+
+    /**
+     * Construct a JSONTokener from a string.
+     *
+     * @param s     A source string.
+     */
     public JSONTokener(String s) {
-        this(new StringReader(s));
+        this(new StringReader(s), false, 14);
     }
 
 
@@ -431,7 +456,7 @@ public class JSONTokener {
             return new JSONObject(this);
         case '[':
             this.back();
-            return new JSONArray(this);
+            return new JSONArray(this, this.bigNumberLength);
         }
 
         /*
@@ -456,7 +481,7 @@ public class JSONTokener {
         if ("".equals(string)) {
             throw this.syntaxError("Missing value");
         }
-        return JSONObject.stringToValue(string);
+        return JSONObject.stringToValue(string, bigNumberEnabled, bigNumberLength);
     }
 
 
