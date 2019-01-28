@@ -102,6 +102,9 @@ import java.util.regex.Pattern;
  * @version 2016-08-15
  */
 public class JSONObject {
+
+    public static final int BIGNUMBER_LENGTH = 14;
+
     /**
      * JSONObject.NULL is equivalent to the value that JavaScript calls null,
      * whilst Java's null is equivalent to the value that JavaScript calls
@@ -294,7 +297,7 @@ public class JSONObject {
      *             duplicated key.
      */
     public JSONObject(JSONTokener x) throws JSONException {
-        this(x, 14);
+        this(x, BIGNUMBER_LENGTH);
     }
 
     /**
@@ -449,7 +452,7 @@ public class JSONObject {
      *             duplicated key.
      */
     public JSONObject(String source, boolean bigNumberEnabled) throws JSONException {
-        this(new JSONTokener(source, bigNumberEnabled, 14), 14);
+        this(new JSONTokener(source, bigNumberEnabled, BIGNUMBER_LENGTH), BIGNUMBER_LENGTH);
     }
     /**
      * Construct a JSONObject from a source JSON text string. This is the most
@@ -467,7 +470,7 @@ public class JSONObject {
      *             duplicated key.
      */
     public JSONObject(String source) throws JSONException {
-        this(new JSONTokener(source, false, 14), 14);
+        this(new JSONTokener(source, false, BIGNUMBER_LENGTH), BIGNUMBER_LENGTH);
     }
 
     /**
@@ -2251,6 +2254,10 @@ public class JSONObject {
             }
         }
         return string;
+    }
+
+    public static Object stringToValue(String string) {
+        return stringToValue(string, false, BIGNUMBER_LENGTH);
     }
 
     /**

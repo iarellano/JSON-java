@@ -1,7 +1,8 @@
 package org.json;
 
 /*
-Copyright (c) 2002 JSON.org
+Original work Copyright (c) 2002 JSON.org
+Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +26,8 @@ SOFTWARE.
 */
 
 import java.io.Reader;
+
+import static org.json.JSONObject.BIGNUMBER_LENGTH;
 
 /**
  * The XMLTokener extends the JSONTokener to provide additional methods
@@ -50,11 +53,51 @@ public class XMLTokener extends JSONTokener {
    }
 
     /**
-     * Construct an XMLTokener from a Reader.
-     * @param r A source reader.
+     * Construct an XMLTokener from a Reader, optionally allows to use BigDecimal and BigInteger
+     * @param reader A source reader.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      */
-    public XMLTokener(Reader r) {
-        super(r);
+    public XMLTokener(Reader reader, boolean bigNumberEnabled, int bigNumberLength) {
+        super(reader, bigNumberEnabled, bigNumberLength);
+    }
+
+    /**
+     * Construct an XMLTokener from a Reader, optionally allows to use BigDecimal and BigInteger
+     * @param reader A source reader.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public XMLTokener(Reader reader, boolean bigNumberEnabled) {
+        this(reader, bigNumberEnabled, BIGNUMBER_LENGTH);
+    }
+
+    /**
+     * Construct an XMLTokener from a Reader.
+     * @param reader A source reader.
+     */
+    public XMLTokener(Reader reader) {
+        this(reader, false, BIGNUMBER_LENGTH);
+    }
+
+    /**
+     * Construct an XMLTokener from a string, optionally allows to use BigDecimal and BigInteger
+     * @param s A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public XMLTokener(String s, boolean bigNumberEnabled, int bigNumberLength) {
+        super(s, bigNumberEnabled, bigNumberLength);
+    }
+
+    /**
+     * Construct an XMLTokener from a string, optionally allows to use BigDecimal and BigInteger.
+     * @param s A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public XMLTokener(String s, boolean bigNumberEnabled) {
+        this(s, bigNumberEnabled, BIGNUMBER_LENGTH);
     }
 
     /**
@@ -62,7 +105,7 @@ public class XMLTokener extends JSONTokener {
      * @param s A source string.
      */
     public XMLTokener(String s) {
-        super(s);
+        this(s, false, BIGNUMBER_LENGTH);
     }
 
     /**

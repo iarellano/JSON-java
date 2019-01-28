@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.json.JSONObject.BIGNUMBER_LENGTH;
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a
@@ -89,7 +90,7 @@ public class JSONArray implements Iterable<Object> {
      */
     private final ArrayList<Object> myArrayList;
 
-    private int bigNumberLength = 14;
+    private int bigNumberLength = BIGNUMBER_LENGTH;
 
     /**
      * Construct an empty JSONArray.
@@ -98,7 +99,10 @@ public class JSONArray implements Iterable<Object> {
         this.myArrayList = new ArrayList<Object>();
     }
 
-
+    /**
+     * Construct an empty JSONArray.
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
     public JSONArray(int bigNumberLength) {
         this();
         this.bigNumberLength = bigNumberLength;
@@ -110,6 +114,8 @@ public class JSONArray implements Iterable<Object> {
      *
      * @param x
      *            A JSONTokener
+     * @param bigNumberLength
+     *            Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      * @throws JSONException
      *             If there is a syntax error.
      */
@@ -167,21 +173,42 @@ public class JSONArray implements Iterable<Object> {
      *             If there is a syntax error.
      */
     public JSONArray(JSONTokener x) throws JSONException {
-        this(x, 14);
+        this(x, BIGNUMBER_LENGTH);
     }
 
     /**
-     * Construct a JSONArray from a source JSON text.
+     * Construct a JSONArray from a source JSON text, optionally allows to use BigDecimal and BigInteger
      *
      * @param source
      *            A string that begins with <code>[</code>&nbsp;<small>(left
      *            bracket)</small> and ends with <code>]</code>
      *            &nbsp;<small>(right bracket)</small>.
+     * @param bigNumberEnabled
+     *            Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength
+     *            Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      * @throws JSONException
      *             If there is a syntax error.
      */
     public JSONArray(String source, boolean bigNumberEnabled, int bigNumberLength) throws JSONException {
         this(new JSONTokener(source, bigNumberEnabled, bigNumberLength), bigNumberLength);
+    }
+
+    /**
+     * Construct a JSONArray from a source JSON text, optionally allows to use BigDecimal and BigInteger
+     *
+     * @param source
+     *            A string that begins with <code>[</code>&nbsp;<small>(left
+     *            bracket)</small> and ends with <code>]</code>
+     *            &nbsp;<small>(right bracket)</small>.
+     * @param bigNumberEnabled
+     *            Enables to parse BigDecimal and BigInteger to avoid precision loss.
+     *            Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     * @throws JSONException
+     *             If there is a syntax error.
+     */
+    public JSONArray(String source, boolean bigNumberEnabled) throws JSONException {
+        this(source, bigNumberEnabled, BIGNUMBER_LENGTH);
     }
 
     /**
@@ -195,7 +222,7 @@ public class JSONArray implements Iterable<Object> {
      *             If there is a syntax error.
      */
     public JSONArray(String source) throws JSONException {
-        this(new JSONTokener(source), 14);
+        this(source, false);
     }
 
     /**

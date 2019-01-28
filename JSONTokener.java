@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
+import static org.json.JSONObject.BIGNUMBER_LENGTH;
+
 /*
 Original work Copyright (c) 2002 JSON.org
 Modified work Copyright (c) 2019 Isaias Arellano - isaias.arellano.delgado@gmail.com
@@ -59,7 +61,12 @@ public class JSONTokener {
     private boolean bigNumberEnabled;
     private int bigNumberLength;
 
-
+    /**
+     * Construct an JSONTokener from a Reader, optionally allows to use BigDecimal and BigInteger
+     * @param reader A source reader.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
     public JSONTokener(Reader reader, boolean bigNumberEnabled, int bigNumberLength) {
         this.reader = reader.markSupported()
                 ? reader
@@ -76,17 +83,29 @@ public class JSONTokener {
     }
 
     /**
+     * Construct an JSONTokener from a Reader, optionally allows to use BigDecimal and BigInteger
+     * @param reader A source reader.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public JSONTokener(Reader reader, boolean bigNumberEnabled) {
+        this(reader, bigNumberEnabled, BIGNUMBER_LENGTH);
+    }
+
+    /**
      * Construct a JSONTokener from a Reader. The caller must close the Reader.
      *
      * @param reader     A reader.
      */
     public JSONTokener(Reader reader) {
-        this(reader, false, 14);
+        this(reader, false, BIGNUMBER_LENGTH);
     }
 
     /**
      * Construct a JSONTokener from an InputStream. The caller must close the input stream.
      * @param inputStream The source.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      */
     public JSONTokener(InputStream inputStream, boolean bigNumberEnabled, int bigNumberLength) {
         this(new InputStreamReader(inputStream), bigNumberEnabled, bigNumberLength);
@@ -95,9 +114,19 @@ public class JSONTokener {
     /**
      * Construct a JSONTokener from an InputStream. The caller must close the input stream.
      * @param inputStream The source.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public JSONTokener(InputStream inputStream, boolean bigNumberEnabled) {
+        this(inputStream, bigNumberEnabled, BIGNUMBER_LENGTH);
+    }
+
+    /**
+     * Construct a JSONTokener from an InputStream. The caller must close the input stream.
+     * @param inputStream The source.
      */
     public JSONTokener(InputStream inputStream) {
-        this(new InputStreamReader(inputStream), false, 14);
+        this(inputStream, false);
     }
 
 
@@ -105,6 +134,8 @@ public class JSONTokener {
      * Construct a JSONTokener from a string.
      *
      * @param s     A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      */
     public JSONTokener(String s, boolean bigNumberEnabled, int bigNumberLength) {
         this(new StringReader(s), bigNumberEnabled, bigNumberLength);
@@ -114,9 +145,20 @@ public class JSONTokener {
      * Construct a JSONTokener from a string.
      *
      * @param s     A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public JSONTokener(String s, boolean bigNumberEnabled) {
+        this(s, bigNumberEnabled, BIGNUMBER_LENGTH);
+    }
+
+    /**
+     * Construct a JSONTokener from a string.
+     *
+     * @param s     A source string.
      */
     public JSONTokener(String s) {
-        this(new StringReader(s), false, 14);
+        this(s, false);
     }
 
 

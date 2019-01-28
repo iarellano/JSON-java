@@ -25,6 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import static org.json.JSONObject.BIGNUMBER_LENGTH;
+
 /**
  * The HTTPTokener extends the JSONTokener to provide additional methods
  * for the parsing of HTTP headers.
@@ -36,27 +38,32 @@ public class HTTPTokener extends JSONTokener {
     /**
      * Construct an HTTPTokener from a string.
      * @param string A source string.
-     */
-    public HTTPTokener(String string) {
-        this(string, false, 14);
-    }
-
-    /**
-     * Construct an HTTPTokener from a string.
-     * @param string A source string.
-     */
-    public HTTPTokener(String string, boolean bigNumberEnabled) {
-        this(string, bigNumberEnabled, 14);
-    }
-
-    /**
-     * Construct an HTTPTokener from a string.
-     * @param string A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     * @param bigNumberLength Token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
      */
     public HTTPTokener(String string, boolean bigNumberEnabled, int bigNumberLength) {
         super(string, bigNumberEnabled, bigNumberLength);
     }
 
+    /**
+     * Construct an HTTPTokener from a string.
+     * @param string A source string.
+     * @param bigNumberEnabled Enables to parse BigDecimal and BigInteger to avoid precision loss
+     *                         Default token length to consider a number as BigDecimal or BigInteger is {@value org.json.JSONObject#BIGNUMBER_LENGTH}
+     */
+    public HTTPTokener(String string, boolean bigNumberEnabled) {
+        this(string, bigNumberEnabled, BIGNUMBER_LENGTH);
+    }
+
+
+    /**
+     * Construct an HTTPTokener from a string.
+     * @param string A source string.
+     *
+     */
+    public HTTPTokener(String string) {
+        this(string, false);
+    }
 
     /**
      * Get the next token or string. This is used in parsing HTTP headers.
